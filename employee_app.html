@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>React Tutorial</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.3/react.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.3/react-dom.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <style>
+
+    </style>
+  </head>
+  <body>
+    <div id="content"></div>
+    <script type="text/babel">
+      var InputBox = React.createClass({
+        render: function() {
+          return (
+            <div className="select">
+              <div className="title">{this.props.title}</div>
+              <input type="text" placeholder={this.props.placeHolder} onChange={this.props.onChangeFunc} onFocus={this.onFocus} onBlur={this.onBlur}/>
+              <ul onClick={this.props.onSelectFunc}>
+                {this.hintList()}
+              </ul>
+            </div>
+          );
+        },
+        hintList: function(){
+          return this.props.items.map(function(value, index){
+            return <li clasName="list-item" key={index + 1}>
+              {value}
+            </li>
+          });
+        },
+        onBlur: function(){
+          console.log("focus out");
+        },
+        onFocus: function(){
+          console.log("focus")
+        },
+      });
+      var EmployeeBox = React.createClass({
+        render: function() {
+          return (
+            <div className="employeeBox">
+              <div className="title">Select an Employee</div>
+              <div className="option-container">
+              </div>
+              <div className="selectables">
+                  <InputBox title = "Select a Team in the Organization" placeHolder="Select Team..." items={["a", "b", "c"]} onSelectFunc={this.onSelect} onChangeFunc={this.onChange}/>
+                  <InputBox title = "Select an Employee"  placeHolder="Select Employee..." items={["d", "e", "f"]}  onSelectFunc={this.onSelect} onChangeFunc={this.onChange}/>
+              </div>
+            </div>
+          );
+        },
+        onSelect: function(){
+          console.log("selected")
+        },
+        onChange: function(){
+          console.log("here");
+        },
+      });
+      ReactDOM.render(
+        <EmployeeBox />,
+        document.getElementById('content')
+      );
+    </script>
+  </body>
+</html>
