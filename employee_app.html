@@ -51,6 +51,9 @@
         -ms-transform: rotateY(180deg);
         transform: rotateY(180deg);
       }
+      .flip-container.show-app .employeeBox{
+        z-index: 3;
+      }
       .flipper{
         height: 100%;
         width: 100%;
@@ -90,6 +93,7 @@
 
       }
       .employeeBox{
+        background: white;
         height: 100%;
         width: 100%;
         position: relative;
@@ -426,7 +430,6 @@
         validateFilledForm: function(){
           var flag=true,
           state = {};
-          console.log(this.state.searchedTeam)
           if(!this.state.searchedEmployee){
             flag=false;
             state.employeeSelectError = true;
@@ -457,7 +460,8 @@
         onChange: function(event){
           var target = event.target,
           inputValue = target.value,
-          selectedTeam = null;
+          selectedTeam = null,
+          searchedValues;
           if(target.getAttribute('data-value') === "team"){
             if(inputValue){
               searchedValues = this.state.data.filter(function(value){
@@ -485,10 +489,10 @@
         },
         showHideApp: function(){
           if(this.state.flipClass.match('show-app')){
-            this.setState({flipClass: "flip-container", disableEmployeeSelect: true, disableTeamSelect: true})
+            this.setState({flipClass: "flip-container"})
           }
           else{
-            this.setState({flipClass: "flip-container show-app", disableTeamSelect: false})
+            this.setState({flipClass: "flip-container show-app"})
           }
         }
       });
