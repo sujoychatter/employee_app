@@ -7,6 +7,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.3/react-dom.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
     <style>
       .options-list.hide{
         display: none;
@@ -14,12 +15,97 @@
       html, body, #content, .employee-wrapper{
         height: 100%;
         width: 100%;
+        font-family: 'arial';
+        overflow: hidden;
+      }
+      .employeeBox{
+        height: 260px;
+        width: 340px;
+        margin: -170px auto 0 auto;
+        top: 50%;
+        position: relative;
+        padding: 15px;
+        border: 1px solid;
+      }
+      .title{
+        font-size: 23px;
+      }
+      .option-container{
+        margin: 20px 0 15px 0;
+        font-size: 12px;
+      }
+      .email-check{
+        position: relative;
+        bottom: 1px;
+        margin-right: 10px;
+      }
+      .title-input{
+        font-size: 12px;
+        font-weight: bold;
+      }
+      .input-box{
+        margin: 5px 0 20px 0;
+        height: 35px;
+        width: 100%;
+        box-sizing: border-box;
+        padding-right: 25px;
+        outline-width: 2px;
+      }
+      .close{
+        position: absolute;
+        right: 5px;
+        top: 5px;
+        cursor: pointer;
+      }
+      .select{
+        position: relative;
+      }
+      .down-icon{
+        position: absolute;
+        right: 6px;
+        top: 31px;
+        font-size: 11px;
+      }
+      .options-list{
+        position: absolute;
+        z-index: 1;
+        margin: 0;
+        list-style: none;
+        padding: 5px 10px;
+        width: 100%;
+        box-sizing: border-box;
+        top: 55px;
+        background: white;
+      }
+      .list-item{
+        padding: 5px 0;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      .button{
+        display: inline-block;
+        background: grey;
+        height: 30px;
+        width: 80px;
+        border-radius: 2px;
+        text-align: center;
+        line-height: 30px;
+        margin: 0 0 0 10px;
+        cursor: pointer;
+        float: right;
       }
     </style>
   </head>
   <body>
     <div id="content"></div>
     <script type="text/babel">
+      var Button = React.createClass({
+        render: function(){
+          return <div className="button" onClick={this.props.callBack}>
+            {this.props.text}
+          </div>
+        }
+      });
       var InputBox = React.createClass({
         getInitialState: function(){
           return {
@@ -27,19 +113,19 @@
           }
         },
         componentWillReceiveProps: function(nextProps){
-          if(nextProps.selectedValue){
-            this.setState({selectedItem: this.props.selectedValue})
+          if(nextProps.disabledFlag){
+            this.setState({textValue: ''})
           }
         },
         getTextValue: function(){
           return this.props.selectedValue || this.state.textValue
         },
         render: function() {
-          console.log(this.state)
           return (
             <div className="select">
-              <div className="title">{this.props.title}</div>
+              <div className="title-input">{this.props.title}</div>
               <input className="input-box" data-value={this.props.dataValue} type="text" placeholder={this.props.placeHolder} onChange={this.onChangeFunc} onFocus={this.onFocus} onBlur={this.onBlur} disabled={this.props.disabledFlag} value={this.getTextValue()}/>
+              <i className="fa fa-chevron-down down-icon"></i>
               <ul onClick={this.props.onSelectFunc} className={this.getOptionsClass()}>
                 {this.hintList()}
               </ul>
@@ -57,7 +143,7 @@
           if(this.props.items && this.props.items.length > 0){
             var self=this;
             return this.props.items.map(function(value, index){
-              return <li clasName="list-item" key={index + 1} data-value={self.props.dataValue}>
+              return <li className="list-item" key={index + 1} data-value={self.props.dataValue}>
                 {value}
               </li>
             });
@@ -97,13 +183,17 @@
           return (
             <div className="employee-wrapper" onClick={this.closeDropDowns}>
               <div className="employeeBox">
+                <i className="fa fa-times close"></i>
                 <div className="title">Select an Employee</div>
                 <div className="option-container">
+                  <input className="email-check" type="checkbox"/>
+                  Send welcome email to employee
                 </div>
                 <div className="selectables">
                     <InputBox title = "Select a Team in the Organization" placeHolder="Select Team..." items={this.state.searchedTeamHints} onSelectFunc={this.onSelect} onChangeFunc={this.onChange} dataValue="team" selectedValue={this.state.searchedTeam} showOptions={this.state.showTeamDropdown}/>
                     <InputBox title = "Select an Employee"  placeHolder="Select Employee..." items={this.state.searchedEmployeeHints}  onSelectFunc={this.onSelect} onChangeFunc={this.onChange} dataValue="emp" disabledFlag={this.state.disableEmployeeSelect} selectedValue={this.state.searchedEmployee} showOptions={this.state.showEmpDropdown}/>
                 </div>
+                <Button text="Ok" callBack={this.submit}/><Button text="Cancel" callBack={this.cancel}/>
               </div>
             </div>
           );
@@ -135,7 +225,7 @@
                 return value.team
               });
             }
-            this.setState({searchedTeam: '', disableEmployeeSelect: true, searchedTeamHints:searchedValues, searchedEmployeeHints: null, showTeamDropdown: true})
+            this.setState({searchedTeam: '',searchedEmployee: '', disableEmployeeSelect: true, searchedTeamHints:searchedValues, searchedEmployeeHints: null, showTeamDropdown: true})
           }
           else if(target.data('value') === "emp"){
             var inputValue = target.val(),
