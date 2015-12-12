@@ -8,57 +8,150 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
     <style>
-
+      .options-list.hide{
+        display: none;
+      }
+      html, body, #content, .employee-wrapper{
+        height: 100%;
+        width: 100%;
+      }
     </style>
   </head>
   <body>
     <div id="content"></div>
     <script type="text/babel">
       var InputBox = React.createClass({
+        getInitialState: function(){
+          return {
+            textValue: ''
+          }
+        },
+        componentWillReceiveProps: function(nextProps){
+          if(nextProps.selectedValue){
+            this.setState({selectedItem: this.props.selectedValue})
+          }
+        },
+        getTextValue: function(){
+          return this.props.selectedValue || this.state.textValue
+        },
         render: function() {
+          console.log(this.state)
           return (
             <div className="select">
               <div className="title">{this.props.title}</div>
-              <input type="text" placeholder={this.props.placeHolder} onChange={this.props.onChangeFunc} onFocus={this.onFocus} onBlur={this.onBlur}/>
-              <ul onClick={this.props.onSelectFunc}>
+              <input className="input-box" data-value={this.props.dataValue} type="text" placeholder={this.props.placeHolder} onChange={this.onChangeFunc} onFocus={this.onFocus} onBlur={this.onBlur} disabled={this.props.disabledFlag} value={this.getTextValue()}/>
+              <ul onClick={this.props.onSelectFunc} className={this.getOptionsClass()}>
                 {this.hintList()}
               </ul>
             </div>
           );
         },
+        getOptionsClass: function(){
+          var class_name = "options-list";
+          if(this.props.showOptions)
+            return class_name + " show";
+          else
+            return class_name + " hide";
+        },
         hintList: function(){
-          return this.props.items.map(function(value, index){
-            return <li clasName="list-item" key={index + 1}>
-              {value}
-            </li>
-          });
+          if(this.props.items && this.props.items.length > 0){
+            var self=this;
+            return this.props.items.map(function(value, index){
+              return <li clasName="list-item" key={index + 1} data-value={self.props.dataValue}>
+                {value}
+              </li>
+            });
+          }
+          else if(this.props.items){
+            return "No results found";
+          }
+          else{
+            return "Type to get searched values";
+          }
         },
-        onBlur: function(){
-          console.log("focus out");
-        },
-        onFocus: function(){
-          console.log("focus")
-        },
+        onChangeFunc: function(event){
+          this.setState({textValue: $(event.target).val()})
+          this.props.onChangeFunc(event)
+        }
       });
       var EmployeeBox = React.createClass({
+        getInitialState: function(){
+          return {
+            data: [
+              {team:'Engineering',employees:['Lawana Fan', 'Larry Rainer', 'Rahul Malik', 'Leah Shumway']},
+              {team:'Executive',employees:['RohanGupta','RondaDean','RobbyMaharaj']},
+              {team:'Finance',employees:['CalebBrown','CarolSmithson','CarlSorensen']},
+              {team:'Sales',employees:['AnkitJain','AnjaliMaulingkar']}
+            ],
+            searchedTeam: '',
+            searchedEmployee: '',
+            searchedTeamHints: null,
+            searchedEmployeeHints: null,
+            disableEmployeeSelect: true,
+            showTeamDropdown: false,
+            showTeamDropdown: false
+
+          }
+        },
         render: function() {
           return (
-            <div className="employeeBox">
-              <div className="title">Select an Employee</div>
-              <div className="option-container">
-              </div>
-              <div className="selectables">
-                  <InputBox title = "Select a Team in the Organization" placeHolder="Select Team..." items={["a", "b", "c"]} onSelectFunc={this.onSelect} onChangeFunc={this.onChange}/>
-                  <InputBox title = "Select an Employee"  placeHolder="Select Employee..." items={["d", "e", "f"]}  onSelectFunc={this.onSelect} onChangeFunc={this.onChange}/>
+            <div className="employee-wrapper" onClick={this.closeDropDowns}>
+              <div className="employeeBox">
+                <div className="title">Select an Employee</div>
+                <div className="option-container">
+                </div>
+                <div className="selectables">
+                    <InputBox title = "Select a Team in the Organization" placeHolder="Select Team..." items={this.state.searchedTeamHints} onSelectFunc={this.onSelect} onChangeFunc={this.onChange} dataValue="team" selectedValue={this.state.searchedTeam} showOptions={this.state.showTeamDropdown}/>
+                    <InputBox title = "Select an Employee"  placeHolder="Select Employee..." items={this.state.searchedEmployeeHints}  onSelectFunc={this.onSelect} onChangeFunc={this.onChange} dataValue="emp" disabledFlag={this.state.disableEmployeeSelect} selectedValue={this.state.searchedEmployee} showOptions={this.state.showEmpDropdown}/>
+                </div>
               </div>
             </div>
           );
         },
-        onSelect: function(){
-          console.log("selected")
+        closeDropDowns: function(event){
+          if(!event.target.classList.contains('input-box')){
+            this.setState({showTeamDropdown: false, showEmpDropdown: false})
+          }
         },
-        onChange: function(){
-          console.log("here");
+        onSelect: function(event){
+          var target = $(event.target);
+          if(target.data('value') === "team"){
+             this.setState({ searchedTeam: target.text(),  disableEmployeeSelect: false})
+          }
+          else if(target.data('value') === "emp"){
+             this.setState({ searchedEmployee: target.text()})
+          }
+        },
+        onChange: function(event){
+          var target = $(event.target);
+          if(target.data('value') === "team"){
+            var inputValue = target.val(),
+            searchedValues = null;
+            if(inputValue){
+              searchedValues = this.state.data.filter(function(value){
+                var regExp = new RegExp(inputValue, "i")
+                return value.team.match(regExp)
+              }).map(function(value){
+                return value.team
+              });
+            }
+            this.setState({searchedTeam: '', disableEmployeeSelect: true, searchedTeamHints:searchedValues, searchedEmployeeHints: null, showTeamDropdown: true})
+          }
+          else if(target.data('value') === "emp"){
+            var inputValue = target.val(),
+            selectedTeam = null;
+            if(inputValue && this.state.searchedTeam){
+              var employee_list = this.state.data[this.state], self=this;
+              selectedTeam = this.state.data.filter(function(value){
+                return value.team == self.state.searchedTeam
+              })[0]
+              var regExp = new RegExp(inputValue, "i");
+              searchedValues = selectedTeam.employees.filter(function(value){
+                return value.match(regExp)
+              });
+            }
+            this.setState({searchedEmployee: '', searchedEmployeeHints:searchedValues, showEmpDropdown : true})
+          }
         },
       });
       ReactDOM.render(
