@@ -50,6 +50,10 @@
         box-sizing: border-box;
         padding-right: 25px;
         outline-width: 2px;
+        padding-left: 10px;
+      }
+      .input-box.error{
+        border: 1px solid red;
       }
       .close{
         position: absolute;
@@ -101,9 +105,14 @@
     <script type="text/babel">
       var Button = React.createClass({
         render: function(){
-          return <div className="button" onClick={this.props.callBack}>
+          return <div className="button" data-id={this.props.idName} onClick={this.clicked}>
             {this.props.text}
           </div>
+        },
+        clicked: function(e){
+          if(!this.props.validate || this.props.validate(e)){
+            this.props.callBack(e)
+          }
         }
       });
       var InputBox = React.createClass({
@@ -124,13 +133,20 @@
           return (
             <div className="select">
               <div className="title-input">{this.props.title}</div>
-              <input className="input-box" data-value={this.props.dataValue} type="text" placeholder={this.props.placeHolder} onChange={this.onChangeFunc} onFocus={this.onFocus} onBlur={this.onBlur} disabled={this.props.disabledFlag} value={this.getTextValue()}/>
+              <input className={this.getInputClass()} data-value={this.props.dataValue} type="text" placeholder={this.props.placeHolder} onChange={this.onChangeFunc} onFocus={this.onFocus} onBlur={this.onBlur} disabled={this.props.disabledFlag} value={this.getTextValue()}/>
               <i className="fa fa-chevron-down down-icon"></i>
               <ul onClick={this.props.onSelectFunc} className={this.getOptionsClass()}>
                 {this.hintList()}
               </ul>
             </div>
           );
+        },
+        getInputClass: function(){
+          var className="input-box"
+          if(this.props.error){
+            className = className + " error";
+          }
+          return className;
         },
         getOptionsClass: function(){
           var class_name = "options-list";
@@ -175,7 +191,9 @@
             searchedEmployeeHints: null,
             disableEmployeeSelect: true,
             showTeamDropdown: false,
-            showTeamDropdown: false
+            showTeamDropdown: false,
+            employeeSelectError: false,
+            teamSelectError: false
 
           }
         },
@@ -190,13 +208,29 @@
                   Send welcome email to employee
                 </div>
                 <div className="selectables">
-                    <InputBox title = "Select a Team in the Organization" placeHolder="Select Team..." items={this.state.searchedTeamHints} onSelectFunc={this.onSelect} onChangeFunc={this.onChange} dataValue="team" selectedValue={this.state.searchedTeam} showOptions={this.state.showTeamDropdown}/>
-                    <InputBox title = "Select an Employee"  placeHolder="Select Employee..." items={this.state.searchedEmployeeHints}  onSelectFunc={this.onSelect} onChangeFunc={this.onChange} dataValue="emp" disabledFlag={this.state.disableEmployeeSelect} selectedValue={this.state.searchedEmployee} showOptions={this.state.showEmpDropdown}/>
+                    <InputBox title = "Select a Team in the Organization" placeHolder="Select Team..." items={this.state.searchedTeamHints} onSelectFunc={this.onSelect} onChangeFunc={this.onChange} dataValue="team" selectedValue={this.state.searchedTeam} showOptions={this.state.showTeamDropdown} error={this.state.teamSelectError}/>
+                    <InputBox title = "Select an Employee"  placeHolder="Select Employee..." items={this.state.searchedEmployeeHints}  onSelectFunc={this.onSelect} onChangeFunc={this.onChange} dataValue="emp" disabledFlag={this.state.disableEmployeeSelect} selectedValue={this.state.searchedEmployee} showOptions={this.state.showEmpDropdown} error={this.state.employeeSelectError}/>
                 </div>
-                <Button text="Ok" callBack={this.submit}/><Button text="Cancel" callBack={this.cancel}/>
+                <Button text="Ok" callBack={this.submit} validate={this.validateFilledForm}/><Button text="Cancel" callBack={this.cancel}/>
               </div>
             </div>
           );
+        },
+        validateFilledForm: function(){
+          var flag=true,
+          state = {teamSelectError: true};
+          if(!this.state.searchedEmployee){
+            flag=false;
+            state.employeeSelectError = true;
+          }
+          if(!this.state.searchedTeam){
+            flag=false
+            state.teamSelectError = true;
+          }
+          if(!flag){
+            this.setState(state);
+          }
+          return flag;
         },
         closeDropDowns: function(event){
           if(!event.target.classList.contains('input-box')){
@@ -225,7 +259,7 @@
                 return value.team
               });
             }
-            this.setState({searchedTeam: '',searchedEmployee: '', disableEmployeeSelect: true, searchedTeamHints:searchedValues, searchedEmployeeHints: null, showTeamDropdown: true})
+            this.setState({searchedTeam: '',searchedEmployee: '', disableEmployeeSelect: true, searchedTeamHints:searchedValues, searchedEmployeeHints: null, showTeamDropdown: true, teamSelectError: false})
           }
           else if(target.data('value') === "emp"){
             var inputValue = target.val(),
@@ -240,9 +274,15 @@
                 return value.match(regExp)
               });
             }
-            this.setState({searchedEmployee: '', searchedEmployeeHints:searchedValues, showEmpDropdown : true})
+            this.setState({searchedEmployee: '', searchedEmployeeHints:searchedValues, showEmpDropdown : true, employeeSelectError: false})
           }
         },
+        cancel: function(e){
+          console.log("close")
+        },
+        submit: function(e){
+          console.log("submit")
+        }
       });
       ReactDOM.render(
         <EmployeeBox />,
